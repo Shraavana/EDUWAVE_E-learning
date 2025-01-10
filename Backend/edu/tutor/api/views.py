@@ -8,6 +8,7 @@ from smtplib import SMTPException
 import logging
 from .serializers import *
 from tutor.models import *
+from rest_framework.permissions import AllowAny
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,7 @@ class TutorViewSet(viewsets.ModelViewSet):
     serializer_class = TutorSerializer
 
     def create(self, request):
+        permission_classes = [AllowAny] # This is crucial - allows unauthenticated access
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

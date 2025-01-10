@@ -8,7 +8,11 @@ from django.utils.timezone import now, timedelta
 from rest_framework_simplejwt.tokens import RefreshToken ,AccessToken
 from django.contrib.auth import authenticate
 
+from rest_framework.permissions import AllowAny
+
 class RegisterView(APIView):
+    permission_classes = [AllowAny]  # This is crucial - allows unauthenticated access
+    
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
@@ -30,33 +34,59 @@ class RegisterView(APIView):
                 'message': "User registered. OTP sent to email.",
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
-        # Correct usage of serializer.errors
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
 class VerifyOTPView(APIView):
+    permission_classes = [AllowAny]  # This is crucial - allows unauthenticated access
     def post(self, request):
         email = request.data.get('email')
         otp = request.data.get('otp')
+        
+        if not email or not otp:
+            return Response(
+                {'error': 'Email and OTP are required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        print('The calling of the function')
+            
         try:
             user = Users.objects.get(email=email)
-            if (user.otp == otp and user.otp_created_at and now() - user.otp_created_at < timedelta(minutes=10)):
+            if not user.otp or not user.otp_created_at:
+                return Response(
+                    {'error': 'OTP not generated or expired'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            if (user.otp == otp and 
+                user.otp_created_at and 
+                now() - user.otp_created_at < timedelta(minutes=10)):
+                
                 user.is_email_verified = True
                 user.otp = None
                 user.otp_created_at = None
                 user.save()
+                
                 refresh = RefreshToken.for_user(user)
                 return Response({
                     'message': 'Email verified successfully',
                     'refresh_token': str(refresh),
                     'access_token': str(refresh.access_token)
                 })
-            return Response({'error': 'Invalid or expired OTP'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            return Response(
+                {'error': 'Invalid or expired OTP'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
         except Users.DoesNotExist:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {'error': 'User not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         
-class LoginView(APIView):
+class LoginView(APIView): 
     def post(self,request):
         email = request.data.get('email')
         password = request.data.get ('password')
