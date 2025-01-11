@@ -23,40 +23,36 @@ class UserPagination(PageNumberPagination):
 
 
 class AdminLoginView(APIView):
+    permission_classes = []  # Remove permission check for login
+    
     def post(self, request):
-        # Add debug logging
-        print(f"Login attempt with data: {request.data}")
-        
-        serializer = AdminLoginSerializer(data=request.data)
-        print(serializer)
-        
         try:
+            serializer = AdminLoginSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             validated_data = serializer.validated_data
+            
+            # Verify admin status
+            user = validated_data['user']
+            if not user.is_superuser:
+                return Response({
+                    'error': 'User is not an admin'
+                }, status=status.HTTP_403_FORBIDDEN)
             
             return Response({
                 'message': 'Login successful',
                 'tokens': validated_data['tokens'],
                 'user': {
-                    'username': validated_data['user'].username,
-                    'email': validated_data['user'].email,
-                    'is_superuser': validated_data['user'].is_superuser
+                    'username': user.username,
+                    'email': user.email,
+                    'is_superuser': user.is_superuser
                 }
             }, status=status.HTTP_200_OK)
-        
+            
         except ValidationError as e:
-            # Convert the error detail to a more readable format
-            if isinstance(e.detail, dict):
-                error_message = next(iter(e.detail.values()))[0]
-            elif isinstance(e.detail, list):
-                error_message = e.detail[0]
-            else:
-                error_message = str(e.detail)
-                
+            error_message = str(e.detail[0]) if isinstance(e.detail, list) else str(e.detail)
             return Response({
                 'error': error_message
             }, status=status.HTTP_401_UNAUTHORIZED)
-
 
 
 logger = logging.getLogger(__name__)

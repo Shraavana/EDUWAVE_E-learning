@@ -11,7 +11,7 @@ from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny
 
 class RegisterView(APIView):
-    permission_classes = [AllowAny]  # This is crucial - allows unauthenticated access
+    permission_classes = [AllowAny] 
     
     def post(self, request):
         serializer = UserSerializer(data=request.data)
