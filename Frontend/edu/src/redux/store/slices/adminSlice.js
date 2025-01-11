@@ -23,7 +23,7 @@ const adminSlice = createSlice({
   name: 'admin',
   initialState,
   reducers: {
-    
+     
     loginRequest: (state) => {
       state.loading = true;
       state.error = null;

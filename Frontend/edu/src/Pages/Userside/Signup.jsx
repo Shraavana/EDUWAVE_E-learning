@@ -18,6 +18,7 @@ const SignUp = () => {
       return;
     }
     try {
+      console.log('Signup form data:', formData);
       await dispatch(signupUser(formData));
       navigate('/otp');
     } catch (err) {

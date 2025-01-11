@@ -4,8 +4,7 @@ import SignIn from '../Pages/Userside/Signin';
 import SignUp from '../Pages/Userside/Signup';
 import Home from '../Pages/Userside/Home';
 import OTPPage from '../Pages/Userside/Otp';
-import {Provider} from 'react-redux';
-import { store } from '../redux/store/store';
+
 
 const Usersideroutes = () => {
   return (

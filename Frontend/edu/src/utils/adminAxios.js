@@ -1,67 +1,88 @@
 import axios from 'axios';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
 const adminAxios = axios.create({
-  baseURL: `${BACKEND_URL}/api/`,
-  timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
+    baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/`,
+    timeout: 15000,
+    headers: {
+        'Content-Type': 'application/json'
+    }
 });
 
-// Request interceptor
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
 adminAxios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('adminToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+    (config) => {
+        const token = localStorage.getItem('adminToken');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
 );
 
 adminAxios.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      try {
-        const refreshToken = localStorage.getItem('adminRefreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                })
+                .then(token => {
+                    originalRequest.headers.Authorization = `Bearer ${token}`;
+                    return adminAxios(originalRequest);
+                })
+                .catch(err => Promise.reject(err));
+            }
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            try {
+                const refreshToken = localStorage.getItem('adminRefreshToken');
+                if (!refreshToken) {
+                    throw new Error('No refresh token available');
+                }
+
+                const { data } = await axios.post(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/token/refresh/`,
+                    { refresh: refreshToken }
+                );
+
+                localStorage.setItem('adminToken', data.access);
+                originalRequest.headers.Authorization = `Bearer ${data.access}`;
+                
+                processQueue(null, data.access);
+                return adminAxios(originalRequest);
+
+            } catch (refreshError) {
+                processQueue(refreshError, null);
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminRefreshToken');
+                window.location.href = '/admin/login';
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
+            }
         }
 
-        const { data } = await axios.post(`${BACKEND_URL}/api/token/refresh/`, {
-          refresh: refreshToken
-        });
-
-        localStorage.setItem('adminToken', data.access);
-        originalRequest.headers.Authorization = `Bearer ${data.access}`;
-        
-        return adminAxios(originalRequest);
-      } catch (refreshError) {
-        // Clear tokens and redirect to login
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminRefreshToken');
-        window.location.href = '/admin/login';
-        return Promise.reject(refreshError);
-      }
+        return Promise.reject(error);
     }
-
-    // Handle network errors
-    if (!error.response) {
-      return Promise.reject(new Error('Network error. Please check your connection.'));
-    }
-
-    return Promise.reject(error);
-  }
 );
 
 export default adminAxios;

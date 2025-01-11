@@ -12,11 +12,30 @@ import {
 } from '../slices/tutorSlice';
 
 
+// export const signupTutor = (tutorData) => async (dispatch) => {
+//   try {
+//     dispatch(tutorSignupStart());
+//     const response = await axios.post(
+//       `${import.meta.env.VITE_BACKEND_URL}api/tutors/signup/`,
+//       tutorData,
+//       {
+//         headers: {
+//           'Content-Type': 'multipart/form-data',
+//         },
+//       }
+//     );
+//     dispatch(tutorSignupSuccess(response.data));
+//     return response.data; 
+//   } catch (error) {
+
 export const signupTutor = (tutorData) => async (dispatch) => {
   try {
     dispatch(tutorSignupStart());
+    // Make sure there's no double slash in the URL
+    const url = `${import.meta.env.VITE_BACKEND_URL}api/tutors/signup/`.replace(/([^:]\/)\/+/g, "$1");
+    
     const response = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL}/api/tutors/signup/`,
+      url,
       tutorData,
       {
         headers: {
@@ -25,7 +44,7 @@ export const signupTutor = (tutorData) => async (dispatch) => {
       }
     );
     dispatch(tutorSignupSuccess(response.data));
-    return response.data;  // Return the success response
+    return response.data; 
   } catch (error) {
     const errorMessage = error.response?.data?.error || 
                         error.message || 

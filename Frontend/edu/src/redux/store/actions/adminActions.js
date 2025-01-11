@@ -9,13 +9,13 @@ export const adminLogin = (credentials) => async (dispatch) => {
     dispatch(loginRequest());
     
     const config = {
-      headers: {
+      headers: { 
         'Content-Type': 'application/json'
       }
     };
 
     const { data } = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL}/api/admin/login/`,
+      `${import.meta.env.VITE_BACKEND_URL}api/admin/login/`,
       credentials,
       config
     );
