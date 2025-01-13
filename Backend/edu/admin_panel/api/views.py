@@ -1,10 +1,10 @@
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, GenericAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import AdminLoginSerializer
 from user.models import Users
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from django.core.paginator import Paginator
 import logging
@@ -15,6 +15,7 @@ from django.db.models import Q
 from rest_framework.exceptions import ValidationError  
 from .permissions import IsAdminUserWithToken
 from rest_framework.exceptions import ValidationError
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 class UserPagination(PageNumberPagination):
     page_size = 10
@@ -23,7 +24,7 @@ class UserPagination(PageNumberPagination):
 
 
 class AdminLoginView(APIView):
-    permission_classes = []  # Remove permission check for login
+    permission_classes = [] 
     
     def post(self, request):
         try:
@@ -54,71 +55,23 @@ class AdminLoginView(APIView):
                 'error': error_message
             }, status=status.HTTP_401_UNAUTHORIZED)
 
-
 logger = logging.getLogger(__name__)
 
 class UserListView(APIView):
-    permission_classes = [IsAdminUserWithToken]
+    permission_classes = []
     
     def get(self, request, *args, **kwargs):
-        logger.info("Entering UserListView.get()")  # Debug log
+        logger.info("Entering UserListView.get()")
         
         try:
-            # Log request parameters
-            logger.info(f"Request parameters: {request.GET}")
-            
-            # Get and validate page parameter
-            try:
-                page = int(request.GET.get('page', 1))
-                logger.info(f"Page number: {page}")
-            except ValueError:
-                logger.error("Invalid page number provided")
-                return Response({
-                    'error': 'Invalid page number format'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Get search parameter
-            search_query = request.GET.get('search', '')
-            logger.info(f"Search query: {search_query}")
-            
-            # Build queryset
             queryset = Users.objects.all().order_by('-date_joined')
-            logger.info(f"Initial queryset count: {queryset.count()}")
-            
-            # Apply search filter if provided
-            if search_query:
-                queryset = queryset.filter(
-                    Q(username__icontains=search_query) | 
-                    Q(email__icontains=search_query)
-                )
-                logger.info(f"Filtered queryset count: {queryset.count()}")
-            
-            # Apply pagination
-            page_size = 10  # Move this to settings if needed
-            paginator = Paginator(queryset, page_size)
-            
-            try:
-                paginated_users = paginator.page(page)
-                logger.info(f"Successfully paginated. Total pages: {paginator.num_pages}")
-            except Exception as e:
-                logger.error(f"Pagination error: {str(e)}")
-                return Response({
-                    'error': 'Invalid page number'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Serialize the data
-            serializer = UserListSerializer(paginated_users, many=True)
+            logger.info(f"Total users found: {queryset.count()}")
+            serializer = UserListSerializer(queryset, many=True)
             logger.info("Data serialized successfully")
             
-            response_data = {
-                'users': serializer.data,
-                'total_pages': paginator.num_pages,
-                'current_page': page,
-                'total_users': paginator.count
-            }
-            
-            logger.info("Returning successful response")
-            return Response(response_data, status=status.HTTP_200_OK)
+            return Response({
+                'users': serializer.data
+            }, status=status.HTTP_200_OK)
             
         except Exception as e:
             logger.error(f"Unexpected error in UserListView.get(): {str(e)}")
@@ -206,7 +159,7 @@ class AdminTutorListView(ListAPIView):
                 'error': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 class AdminTutorStatusView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUserWithToken]
     
     def patch(self, request, tutor_id):
         try:
@@ -287,16 +240,19 @@ class AdminTutorStatusView(APIView):
             print(f"Error sending rejection email: {str(e)}")
 
 
-class AdminProfileView(APIView):
-    permission_classes = [IsAdminUserWithToken]  
+
+
+class AdminProfileView(GenericAPIView):
+
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
+
         user = request.user  
+        
         data = {
             "username": user.username,
             "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
             "is_superuser": user.is_superuser,
         }
         return Response(data, status=status.HTTP_200_OK)

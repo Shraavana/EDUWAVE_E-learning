@@ -14,8 +14,6 @@ const initialState = {
     list: [],
     loading: false,
     error: null,
-    totalPages: 1,
-    currentPage: 1
   }
 };
 
@@ -55,8 +53,6 @@ const adminSlice = createSlice({
     fetchUsersSuccess: (state, action) => {
       state.users.loading = false;
       state.users.list = action.payload.users;
-      state.users.totalPages = action.payload.totalPages;
-      state.users.currentPage = action.payload.currentPage;
     },
     fetchUsersFail: (state, action) => {
       state.users.loading = false;

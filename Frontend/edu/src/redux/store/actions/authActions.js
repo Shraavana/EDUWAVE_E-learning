@@ -9,8 +9,6 @@ import {
 export const signupUser = (userData) => async (dispatch) => {
   try {
     dispatch(signupStart());
-    
-    // Remove any auth headers for signup request
     const response = await axios.post(
       `${import.meta.env.VITE_BACKEND_URL}api/signup/`, 
       {

@@ -44,29 +44,23 @@ export const adminLogin = (credentials) => async (dispatch) => {
 };
 
 
-
-
-
-export const fetchUsers = (page = 1, search = '') => async (dispatch) => {
+export const fetchUsers = () => async (dispatch) => {
   try {
     dispatch(fetchUsersRequest());
-
-    const response = await adminAxios.get(`/admin/users/?page=${page}&search=${search}`);
-    
+    const response = await adminAxios.get('/admin/users/');
     dispatch(fetchUsersSuccess({
-      users: response.data.users,
-      totalPages: response.data.total_pages,
-      currentPage: response.data.current_page
+      users: response.data.users
     }));
   } catch (error) {
     const errorMessage = 
       error.response?.data?.error ||
       error.response?.data?.message ||
       'Failed to fetch users';
-    
     dispatch(fetchUsersFail(errorMessage));
   }
 };
+
+
 
 export const toggleUserBlock = (userId, currentStatus) => async (dispatch) => {
   try {

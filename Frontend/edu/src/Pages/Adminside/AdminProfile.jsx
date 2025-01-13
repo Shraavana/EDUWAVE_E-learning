@@ -1,18 +1,29 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchAdminProfile } from "../../redux/store/actions/adminActions";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const AdminProfile = () => {
-  const dispatch = useDispatch();
-  const { data: profile, loading, error } = useSelector((state) => state.admin.profile);
+
+  const [profile, setProfile] = useState({})
+
+  const adminFetchProfile = async () => {
+    const accessToken = localStorage.getItem('adminToken');
+    try{
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}api/admin/profile/`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      console.log(response.data);
+      setProfile(response.data);
+    }catch(error){
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
-    dispatch(fetchAdminProfile());
-  }, [dispatch]);
+    adminFetchProfile();
+  }, []);
 
-  if (loading) return <p className="text-center text-gray-600 mt-4">Loading...</p>;
-  if (error) return <p className="text-center text-red-500 mt-4">{error}</p>;
-  if (!profile) return null;
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
@@ -21,19 +32,13 @@ const AdminProfile = () => {
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <p className="text-gray-700">
-          <span className="font-medium">Username:</span> {profile.username}
+          <span className="font-medium">Username: {profile.username}</span> 
         </p>
         <p className="text-gray-700">
-          <span className="font-medium">Email:</span> {profile.email}
+          <span className="font-medium">Email: {profile.email}</span> 
         </p>
         <p className="text-gray-700">
-          <span className="font-medium">First Name:</span> {profile.first_name || "N/A"}
-        </p>
-        <p className="text-gray-700">
-          <span className="font-medium">Last Name:</span> {profile.last_name || "N/A"}
-        </p>
-        <p className="text-gray-700">
-          <span className="font-medium">Superuser:</span> {profile.is_superuser ? "Yes" : "No"}
+          <span className="font-medium">Superuser: {profile.is_superuser ? 'True' : 'False'}</span> 
         </p>
       </div>
     </div>
