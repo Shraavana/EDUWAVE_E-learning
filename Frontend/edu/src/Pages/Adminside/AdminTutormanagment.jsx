@@ -1,40 +1,53 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchTutors, updateTutorStatus } from '../../redux/store/actions/tutorActions';
 import Sidebar from '../../components/Admin/Sidebar';
+import axios from '../../utils/adminAxios';
 
 const AdminTutorManagement = () => {
-  const dispatch = useDispatch();
-  const { tutors, loading } = useSelector((state) => state.tutor);
-  const [selectedTutor, setSelectedTutor] = useState(null);
-  const [comments, setComments] = useState('');
+  const [tutors, setTutors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    dispatch(fetchTutors());
-  }, [dispatch]);
-
-  const handleStatusUpdate = async (tutorId, newStatus) => {
+  const fetchTutors = async () => {
     try {
-      await dispatch(updateTutorStatus(tutorId, newStatus, comments));
-      setSelectedTutor(null);
-      setComments('');
-    } catch (error) {
-      console.error('Failed to update tutor status:', error);
+      const response = await axios.get(`/api/admin/tutors/`);
+      setTutors(response.data);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to fetch tutors');
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleApprovalToggle = async (tutorId) => {
+    try {
+      const response = await axios.patch(
+        `/api/admin/tutors/${tutorId}/status/`,
+        { status: 'approved' }
+      );
+      alert(response.data.message); 
+      fetchTutors(); 
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to update status');
+    }
+  };
+
+  useEffect(() => {
+    fetchTutors();
+  }, []);
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
+  if (error) {
+    return <div>{error}</div>;
+  }
+
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <div className="bg-gray-800 text-white p-4 flex-grow-0">
         <Sidebar />
       </div>
-
-      {/* Main Content */}
       <div className="flex-1 p-6">
         <h1 className="text-2xl font-bold mb-4">Tutor Management</h1>
         <div className="overflow-x-auto">
@@ -57,34 +70,16 @@ const AdminTutorManagement = () => {
                   <td className="border px-4 py-2">{tutor.teaching_experience} years</td>
                   <td className="border px-4 py-2">{tutor.degree}</td>
                   <td className="border px-4 py-2">
-                    <span
-                      className={`px-2 py-1 rounded-full text-sm ${
-                        tutor.status === 'approved'
-                          ? 'bg-green-200 text-green-800'
-                          : tutor.status === 'declined'
-                          ? 'bg-red-200 text-red-800'
-                          : 'bg-yellow-200 text-yellow-800'
-                      }`}
-                    >
-                      {tutor.status}
-                    </span>
+                    {tutor.status === 'pending' ? 'Pending' : 'Approved'}
                   </td>
                   <td className="border px-4 py-2">
                     {tutor.status === 'pending' && (
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleStatusUpdate(tutor.id, 'approved')}
-                          className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleStatusUpdate(tutor.id, 'declined')}
-                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        >
-                          Decline
-                        </button>
-                      </div>
+                      <button
+                        className="bg-green-500 text-white px-3 py-1 rounded"
+                        onClick={() => handleApprovalToggle(tutor.id)}
+                      >
+                        Approve
+                      </button>
                     )}
                   </td>
                 </tr>

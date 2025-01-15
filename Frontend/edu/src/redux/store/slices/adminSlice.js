@@ -5,16 +5,6 @@ const initialState = {
   error: null,
   isAuthenticated: false,
   adminInfo: null,
-  profile: {
-    data: null,
-    loading: false,
-    error: null
-  },
-  users: {
-    list: [],
-    loading: false,
-    error: null,
-  }
 };
 
 const adminSlice = createSlice({
@@ -45,39 +35,6 @@ const adminSlice = createSlice({
       state.error = null;
     },
     
-   
-    fetchUsersRequest: (state) => {
-      state.users.loading = true;
-      state.users.error = null;
-    },
-    fetchUsersSuccess: (state, action) => {
-      state.users.loading = false;
-      state.users.list = action.payload.users;
-    },
-    fetchUsersFail: (state, action) => {
-      state.users.loading = false;
-      state.users.error = action.payload;
-    },
-    updateUserStatus: (state, action) => {
-      const { userId, isActive } = action.payload;
-      state.users.list = state.users.list.map(user =>
-        user.id === userId ? { ...user, is_active: isActive } : user
-      );
-    },
-    fetchProfileRequest: (state) => {
-      state.profile.loading = true;
-      state.profile.error = null;
-    },
-    fetchProfileSuccess: (state, action) => {
-      state.profile.loading = false;
-      state.profile.data = action.payload;
-      state.profile.error = null;
-    },
-    fetchProfileFail: (state, action) => {
-      state.profile.loading = false;
-      state.profile.error = action.payload;
-    },
-
   }
 });
 
@@ -87,13 +44,7 @@ export const {
   loginFail,
   logout,
   clearError,
-  fetchUsersRequest,
-  fetchUsersSuccess,
-  fetchUsersFail,
-  updateUserStatus,
-  fetchProfileRequest,
-  fetchProfileSuccess,
-  fetchProfileFail
+  
   
 } = adminSlice.actions;
 

@@ -10,7 +10,7 @@ export const signupUser = (userData) => async (dispatch) => {
   try {
     dispatch(signupStart());
     const response = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL}api/signup/`, 
+      `${import.meta.env.VITE_BACKEND_URL}/api/signup/`, 
       {
         username: userData.username,
         email: userData.email,
@@ -33,7 +33,7 @@ export const signupUser = (userData) => async (dispatch) => {
 export const verifyOTP = (email, otp) => async (dispatch) => {
   try {
     dispatch(otpVerificationStart());
-    const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}api/verify-otp/`, {
+    const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/verify-otp/`, {
       "email": email,
       "otp": otp
     });
@@ -58,7 +58,7 @@ export const verifyOTP = (email, otp) => async (dispatch) => {
 export const loginUser = (credentials) => async (dispatch) => {
   try {
     dispatch(loginStart());
-    const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}api/login/`, credentials);
+    const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/login/`, credentials);
     dispatch(loginSuccess(response.data));
     localStorage.setItem('token', response.data.access_token);
     return response.data;

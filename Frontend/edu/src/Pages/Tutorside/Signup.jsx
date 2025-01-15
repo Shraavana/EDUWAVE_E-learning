@@ -348,7 +348,6 @@ function SignUp() {
               </p>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
