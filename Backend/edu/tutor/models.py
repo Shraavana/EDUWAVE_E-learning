@@ -10,10 +10,12 @@ class Tutor(models.Model):
     ]
 
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('declined', 'Declined')
-    ]
+    ('pending', 'Pending'),
+    ('approved', 'Approved'),
+    ('declined', 'Declined'),
+    ('blocked', 'Blocked')
+]
+
 
     username = models.CharField(max_length=100, unique=True)
     email = models.EmailField(unique=True)
@@ -27,16 +29,11 @@ class Tutor(models.Model):
     def __str__(self):
         return self.username
 
-    # Optional: Add a method to check password
-    # def check_password(self, raw_password):
-    #     # Implement password checking logic
-    #     # This could use Django's make_password and check_password functions
-    #     from django.contrib.auth.hashers import check_password
-    #     return check_password(raw_password, self.password)
+   
 
 class TutorApprovalLog(models.Model):
     tutor = models.ForeignKey(Tutor, on_delete=models.CASCADE)
-    admin_username = models.CharField(max_length=100, default='system')  # Replace ForeignKey with username
+    admin_username = models.CharField(max_length=100, default='system') 
     status = models.CharField(max_length=20, choices=Tutor.STATUS_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     comments = models.TextField(null=True, blank=True)

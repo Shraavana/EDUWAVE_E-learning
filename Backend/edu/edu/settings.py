@@ -216,6 +216,7 @@ CORS_ALLOW_METHODS =(
 	'OPTIONS',
 	'POST',
 	'PUT',
+    'PATCH'
 )
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -226,13 +227,13 @@ CORS_ALLOW_CREDENTIALS = True #allows all cookies and datas to be inckuded in th
 #     "x-requested-with",
 # ]
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:5137",
-#     "http://127.0.0.1:5137",
-# ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5137",
+    "http://127.0.0.1:5137",
+]
 
-# CSRF_TRUSTED_ORIGINS = [
-#     'http://localhost:5137',
-#     'http://127.0.0.1:5137',
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5137',
+    'http://127.0.0.1:5137',
+]
 

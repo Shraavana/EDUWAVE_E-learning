@@ -53,4 +53,4 @@ class AdminTutorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tutor
         fields = ['id', 'username', 'email', 'teaching_experience', 'degree', 
-                 'certificate', 'status', 'date_joined']
+                 'certificate', 'status']

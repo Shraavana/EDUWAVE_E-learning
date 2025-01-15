@@ -11,13 +11,13 @@ from tutor.models import Tutor, TutorApprovalLog
 from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import AllowAny
 
+
+
 logger = logging.getLogger(__name__)
 
 class TutorViewSet(viewsets.ModelViewSet):
     queryset = Tutor.objects.all()
     serializer_class = TutorSerializer
-
-   
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def signup(self, request):
         print("tryingg...........")
@@ -26,10 +26,8 @@ class TutorViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Create tutor profile
+           
             tutor = serializer.save(status='pending')
-            
-            # Send email confirmation
             self._send_signup_confirmation_email(tutor)
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -41,7 +39,7 @@ class TutorViewSet(viewsets.ModelViewSet):
             )
         except SMTPException as e:
             logger.error(f"Email sending failed: {str(e)}")
-            # Still create the user but notify about email failure
+          
             return Response({
                 "data": serializer.data,
                 "warning": "Account created but confirmation email could not be sent."
@@ -99,7 +97,7 @@ class TutorViewSet(viewsets.ModelViewSet):
                 body=f'''
                 Hello {tutor.username},
 
-                Your tutor signup has been received and is pending approval. 
+                Your tutor signup has been received. 
                 You will be notified once the admin reviews your application.
 
                 Best regards,
